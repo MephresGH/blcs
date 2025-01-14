@@ -198,7 +198,6 @@ startup() {
 					esac
 				done
 
-				
 				if [ "$tag" ]; then
 					git clone "$kernel_link" -b "$tag" --depth=1 "$tag"
 				elif git clone "$kernel_link" -b "$branch" --depth=1 blcs_kernel; then
@@ -206,7 +205,6 @@ startup() {
 					cp "$SCRIPTPATH"/.config "$SCRIPTPATH"/"$directory"
 					break 2
 				else
-					# cd "$version"/custom_linux* || printf "Error: directory not found, exiting...\n" || exit 1
 
 					cd "$SCRIPTPATH"/"$directory" || exit 1
 					git_hash=$(git rev-parse --short HEAD)
@@ -216,8 +214,7 @@ startup() {
 					fi
 
 					git remote set-url origin "$kernel_link"
-					git fetch origin "$branch" --depth=1 --
-					# git worktree add ../custom_linux origin/"$branch" --detach
+					git fetch --depth=1
 					git reset --hard FETCH_HEAD
 					git checkout HEAD
 					break 2
@@ -260,12 +257,14 @@ case "$first_input" in
 	printf "Skipping update process, going to build instead...\n"
 	build=1 second_input=2
 	;;
--[Hh] | --help) printf "Usage: update <option> \
+-[Hh] | --help)
+	printf "Usage: update <option> \
 	\nOptions:\n-F, --force\t\tUpdate local kernel git regardless of status \
 	\n-B, --build\t\tBuild a custom kernel if local git was found \
 	\n-U, --update, any key\tDo a regular update first, then build \
 	\n-H, --help\t\tDisplay this help message\n"
-	exit;;
+	exit
+	;;
 -[Uu] | *) printf "Updating the kernel...\n" ;;
 esac
 
