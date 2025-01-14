@@ -157,7 +157,7 @@ startup() {
 				[ -z "$skip" ] && printf "Kernel is outdated, updating the Linux kernel...\n"
 				[ -f "$old_dir"/.config ] && cp -i "$old_dir"/.config .
 				directory="blcs_kernel"
-				while read -rp "Do you want to download the master, release-candidate or stable branch? (M/R/S) " mrs; do
+				while read -rp "Do you want to download the master, release-candidate, or stable branch, or specify a tag? (M/R/S/[INPUT]) " mrs; do
 					case "$mrs" in
 					[Mm])
 						printf "Downloading newest master kernel branch...\n"
@@ -180,10 +180,28 @@ startup() {
 						version="$stable_ver"
 						break
 						;;
+					*)
+						printf "Checking if the specified tag kernel exists...\n"
+
+						if curl -L https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/refs/tags 2>&1 | grep -q "$mrs"; then
+							kernel_link="https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git"
+							tag="$mrs"
+							break
+						elif curl -L https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/refs/tags 2>&1 | grep -q "$mrs"; then
+							kernel_link="https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git"
+							tag="$mrs"
+							break
+						else
+							printf "Error: tag not found\n"
+						fi
+						;;
 					esac
 				done
 
-				if git clone "$kernel_link" -b "$branch" --depth=1 blcs_kernel; then
+				
+				if [ "$tag" ]; then
+					git clone "$kernel_link" -b "$tag" --depth=1 "$tag"
+				elif git clone "$kernel_link" -b "$branch" --depth=1 blcs_kernel; then
 					git worktree add linux origin/master
 					cp "$SCRIPTPATH"/.config "$SCRIPTPATH"/"$directory"
 					break 2
