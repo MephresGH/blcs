@@ -184,11 +184,11 @@ startup() {
 						printf "Checking if the specified tag kernel exists...\n"
 
 						if curl -L https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/refs/tags 2>&1 | grep -q "$mrs"; then
-							kernel_link="https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git"
+							kernel_link="https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git"
 							tag="$mrs"
 							break
 						elif curl -L https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/refs/tags 2>&1 | grep -q "$mrs"; then
-							kernel_link="https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git"
+							kernel_link="https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git"
 							tag="$mrs"
 							break
 						else
