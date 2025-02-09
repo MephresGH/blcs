@@ -67,6 +67,29 @@ build_kernel() {
 	sudo install -m 0600 "$SCRIPTPATH"/"$directory"/vmlinuz-linux-custom /boot/
 	sudo install -m 0600 System.map /boot/System.map
 
+	while read -rp "Do you want to install custom headers? (Y/N) " yn; do
+		case "$yn" in
+		[Yy])
+			if cd /usr/lib/modules/"$version"*; then
+				sudo mv build build.bak
+				sudo mkdir build
+				sudo cp -r build.bak/* build/
+				sudo cp "$SCRIPTPATH"/pkgbase .
+				sudo install -m 644 "/boot/vmlinuz-linux-custom" ./vmlinuz
+				sudo rm build.bak
+			else
+				printf "Error: directory not found. exiting..."
+				exit
+			fi
+			break
+			;;
+		[Nn])
+			printf "Skipping build process for custom headers.\n"
+			break
+			;;
+		esac
+	done
+
 	if [ -f /usr/bin/booster ]; then
 		printf "Booster found.\n"
 		while read -rp "Do you want to remove all previous initrd files? (Y/N) " yn; do
@@ -99,29 +122,6 @@ build_kernel() {
 			esac
 		done
 	fi
-
-	while read -rp "Do you want to install custom headers? (Y/N) " yn; do
-		case "$yn" in
-		[Yy])
-			if cd /usr/lib/modules/"$version"*; then
-				sudo mv build build.bak
-				sudo mkdir build
-				sudo cp -r build.bak/* build/
-				sudo cp "$SCRIPTPATH"/pkgbase . 
-				sudo install -m 644 "/boot/vmlinuz-linux-custom" .
-				sudo rm build.bak
-			else
-				printf "Error: directory not found. exiting..."
-				exit
-			fi
-			break
-			;;
-		[Nn])
-			printf "Skipping build process for custom headers.\n"
-			break
-			;;
-		esac
-	done
 
 	printf "The kernel has been updated, exiting.\n"
 	exit 0
