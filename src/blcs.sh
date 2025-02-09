@@ -108,6 +108,7 @@ build_kernel() {
 				sudo mkdir build
 				sudo cp -r build.bak/* build/
 				sudo cp "$SCRIPTPATH"/pkgbase . 
+				sudo install -m 644 "/boot/vmlinuz-linux-custom" .
 				sudo rm build.bak
 			else
 				printf "Error: directory not found. exiting..."
