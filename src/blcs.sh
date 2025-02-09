@@ -2,62 +2,7 @@
 
 # shellcheck disable=SC2062
 
-build_kernel() {
-	dir=$(ls -d "$SCRIPTPATH"/"$directory")
-	if ! cd "$dir"; then
-		printf "Error: directory doesn't exist, exiting...\n"
-		exit 1
-	fi
-
-	basic_threads=$(nproc --all)
-	threads=$((basic_threads + 1))
-	new_git_hash=$(git rev-parse --short HEAD)
-
-	while read -rp "What do you want to do here? ([B]uild/Open [M]enu + [B]uild [CHOOSE MENU]/[M]enu/[D]efault Setup/[C]lear/Back to [P]revious Menu) " bdcp conf; do
-		case "$bdcp" in
-		[Bb])
-			git branch -r
-			[ "$git_hash" = "$new_git_hash" ] && git_hash=$(git rev-parse --short HEAD)
-			if ! make -j"$threads"; then
-				make clean -j"$threads"
-				make -j"$threads"
-			fi
-			break
-			;;
-		"mb" | "MB")
-			git branch -r
-			[ "$git_hash" = "$new_git_hash" ] && git_hash=$(git rev-parse --short HEAD)
-			case "$conf" in
-			"")
-				printf "Warning: no menu selected, continuing without build menu\n"
-				;;
-			*) make "$conf"config -j"$threads" ;;
-			esac
-			if ! make -j"$threads"; then
-				make clean -j"$threads"
-				make -j"$threads"
-				break
-			fi
-			printf "Error: invalid menu selected\n"
-			break
-			;;
-		[Dd])
-			make clean -j"$threads"
-			cp "$SCRIPTPATH"/.config ..
-			rm "$SCRIPTPATH"/.config
-			make localmodconfig -j"$threads"
-			make menuconfig -j"$threads"
-			break
-			;;
-		[Cc]) sudo make clean -j"$threads" ;;
-		[Pp])
-			printf "Going back to previous menu...\n"
-			startup
-			;;
-		*) printf "Error: input is invalid\n" ;;
-		esac
-	done
-
+install_kernel() {
 	if dir=$(find /usr/lib/modules/"$version"* | head -n1); then
 		sudo rm -r "$dir" 2>/dev/null
 	fi
@@ -128,6 +73,63 @@ build_kernel() {
 	exit 0
 }
 
+build_kernel() {
+	dir=$(ls -d "$SCRIPTPATH"/"$directory")
+	if ! cd "$dir"; then
+		printf "Error: directory doesn't exist, exiting...\n"
+		exit 1
+	fi
+
+	basic_threads=$(nproc --all)
+	threads=$((basic_threads + 1))
+	new_git_hash=$(git rev-parse --short HEAD)
+
+	while read -rp "What do you want to do here? ([B]uild/Open [M]enu + [B]uild [CHOOSE MENU]/[M]enu/[D]efault Setup/[C]lear/Back to [P]revious Menu) " bdcp conf; do
+		case "$bdcp" in
+		[Bb])
+			git branch -r
+			[ "$git_hash" = "$new_git_hash" ] && git_hash=$(git rev-parse --short HEAD)
+			if ! make -j"$threads"; then
+				make clean -j"$threads"
+				make -j"$threads"
+			fi
+			install_kernel
+			;;
+		"mb" | "MB")
+			git branch -r
+			[ "$git_hash" = "$new_git_hash" ] && git_hash=$(git rev-parse --short HEAD)
+			case "$conf" in
+			"")
+				printf "Warning: no menu selected, continuing without build menu\n"
+				;;
+			*) make "$conf"config -j"$threads" ;;
+			esac
+			if ! make -j"$threads"; then
+				make clean -j"$threads"
+				make -j"$threads"
+				install_kernel
+			fi
+			printf "Error: invalid menu selected\n"
+			install_kernel
+			;;
+		[Dd])
+			make clean -j"$threads"
+			cp "$SCRIPTPATH"/.config ..
+			rm "$SCRIPTPATH"/.config
+			make localmodconfig -j"$threads"
+			make menuconfig -j"$threads"
+			install_kernel
+			;;
+		[Cc]) sudo make clean -j"$threads" ;;
+		[Pp])
+			printf "Going back to previous menu...\n"
+			startup
+			;;
+		*) printf "Error: input is invalid\n" ;;
+		esac
+	done
+}
+
 startup() {
 	old_dir=$(find ./blcs_kernel* -type d 2>/dev/null | head -n1)
 	active_ver=$(uname -r)
@@ -145,7 +147,7 @@ startup() {
 	printf "Newest mainline kernel: %s\n" "${mainline_ver/-/.0-}"
 	printf "Newest stable kernel: %s\n" "$stable_ver"
 	printf "Newest LTS kernel: %s\n\n" "$lts_ver"
-	! [ "$second_input" ] &&
+	if [ ! "$second_input" ]; then
 		while read -rp "Do you want to update your Linux kernel, only build, or exit? ([U]pdate|RETURN/[B]uild/[S]how Newest Version/[E]xit) " ubse; do
 			case "$ubse" in
 			[Uu] | "")
@@ -246,7 +248,8 @@ startup() {
 			*) printf "Error: input is invalid\n" ;;
 			esac
 		done
-	build_kernel
+		build_kernel
+	fi
 }
 
 SCRIPTPATH=$(readlink -f "$0" | xargs dirname)
