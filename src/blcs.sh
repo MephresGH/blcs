@@ -9,7 +9,8 @@ build_kernel() {
 		exit 1
 	fi
 
-	basic_threads=$(nproc --all) threads=$((basic_threads + 1))
+	basic_threads=$(nproc --all)
+	threads=$((basic_threads + 1))
 	new_git_hash=$(git rev-parse --short HEAD)
 
 	while read -rp "What do you want to do here? ([B]uild/Open [M]enu + [B]uild [CHOOSE MENU]/[M]enu/[D]efault Setup/[C]lear/Back to [P]revious Menu) " bdcp conf; do
@@ -128,7 +129,8 @@ build_kernel() {
 }
 
 startup() {
-	old_dir=$(find ./blcs_kernel* -type d 2>/dev/null | head -n1) active_ver=$(uname -r)
+	old_dir=$(find ./blcs_kernel* -type d 2>/dev/null | head -n1)
+	active_ver=$(uname -r)
 	mainline_ver=$(curl -s https://www.kernel.org | grep -A1 'mainline:' | grep -oP '(?<=strong>).*(?=</strong.*)')
 	stable_ver=$(curl -s https://www.kernel.org | grep -A1 'stable:' | grep -oPm1 '(?<=strong>).*(?=</strong.*)')
 	lts_ver=$(curl -s https://www.kernel.org | grep -A1 'longterm:' | grep -oPm1 '(?<=strong>).*(?=</strong.*)')
@@ -248,7 +250,10 @@ startup() {
 }
 
 SCRIPTPATH=$(readlink -f "$0" | xargs dirname)
-first_input="$1" second_input="$2" skip=0
+first_input="$1"
+second_input="$2"
+skip=0
+
 printf "Bash Linux Compilation Script\n\n"
 
 case "$first_input" in
