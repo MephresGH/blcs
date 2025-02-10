@@ -24,7 +24,7 @@ install_kernel() {
 				sudo install -m 644 "/boot/vmlinuz-linux-custom" ./vmlinuz
 				sudo rm build.bak
 			else
-				printf "Error: directory not found. exiting..."
+				printf "\nError: directory not found. exiting..."
 				exit
 			fi
 			break
@@ -76,7 +76,7 @@ install_kernel() {
 build_kernel() {
 	dir=$(ls -d "$SCRIPTPATH"/"$directory")
 	if ! cd "$dir"; then
-		printf "Error: directory doesn't exist, exiting...\n"
+		printf "\nError: directory doesn't exist, exiting...\n"
 		exit 1
 	fi
 
@@ -109,7 +109,7 @@ build_kernel() {
 				make -j"$threads"
 				install_kernel
 			fi
-			printf "Error: invalid menu selected\n"
+			printf "\nError: invalid menu selected\n"
 			install_kernel
 			;;
 		[Dd])
@@ -125,7 +125,7 @@ build_kernel() {
 			printf "Going back to previous menu...\n"
 			startup
 			;;
-		*) printf "Error: input is invalid\n" ;;
+		*) printf "\nError: input is invalid\n" ;;
 		esac
 	done
 }
@@ -199,7 +199,7 @@ startup() {
 							tag="$mrs"
 							break
 						else
-							printf "Error: tag '%s' not found\n" "$mrs"
+							printf "\nError: tag '%s' not found\n" "$mrs"
 						fi
 						;;
 					esac
@@ -245,7 +245,7 @@ startup() {
 				printf "Exiting...\n"
 				exit
 				;;
-			*) printf "Error: input is invalid\n" ;;
+			*) printf "\nError: input is invalid\n" ;;
 			esac
 		done
 		build_kernel
