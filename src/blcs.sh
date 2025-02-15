@@ -81,6 +81,7 @@ build_kernel() {
 		exit 1
 	fi
 
+	IFS=$' \t\n'
 	basic_threads=$(nproc --all)
 	threads=$((basic_threads + 1))
 	new_git_hash=$(git rev-parse --short HEAD)
@@ -90,26 +91,33 @@ build_kernel() {
 		[Bb])
 			git branch -r
 			[[ "$git_hash" = "$new_git_hash" ]] && git_hash=$(git rev-parse --short HEAD)
+
 			if ! make -j"$threads"; then
 				make clean -j"$threads"
 				make -j"$threads"
 			fi
+
 			install_kernel
 			;;
 		"mb" | "MB")
 			git branch -r
 			[[ "$git_hash" = "$new_git_hash" ]] && git_hash=$(git rev-parse --short HEAD)
+
 			case "$conf" in
 			"")
 				printf "Warning: no menu selected, continuing without build menu\n"
 				;;
-			*) make "$conf"config -j"$threads" ;;
+			*)
+				make "$conf"config -j"$threads"
+				;;
 			esac
+
 			if ! make -j"$threads"; then
 				make clean -j"$threads"
 				make -j"$threads"
 				install_kernel
 			fi
+
 			printf "\nError: invalid menu selected\n"
 			install_kernel
 			;;
@@ -144,7 +152,8 @@ startup() {
 			case "$ubse" in
 			[Uu] | "")
 				printf "Checking if newest kernel is already installed...\n"
-				if [[ "$skip" == true ]]; then
+
+				if [[ "$skip" == 0 ]]; then
 					printf "Skipping check...\n"
 				fi
 
@@ -204,6 +213,7 @@ startup() {
 				printf "Downloading the %s (%s)...\n" "$kernel" "$version"
 
 				[[ "$skip" == 0 ]]
+
 				if [[ "$tag" ]]; then
 					git clone "$kernel_link" -b "$tag" --depth=1 "$tag"
 				elif git clone "$kernel_link" -b "$branch" --depth=1 blcs_kernel; then
