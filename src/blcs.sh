@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
-# shellcheck disable=SC2062
+# shellcheck disable=SC2062,SC2061
+IFS=$'\n'
 
 install_kernel() {
 	if dir=$(find /usr/lib/modules/"$version"* | head -n1); then
@@ -136,67 +137,66 @@ startup() {
 	mainline_ver=$(curl -s https://www.kernel.org | grep -A1 'mainline:' | grep -oP '(?<=strong>).*(?=</strong.*)')
 	stable_ver=$(curl -s https://www.kernel.org | grep -A1 'stable:' | grep -oPm1 '(?<=strong>).*(?=</strong.*)')
 	lts_ver=$(curl -s https://www.kernel.org | grep -A1 'longterm:' | grep -oPm1 '(?<=strong>).*(?=</strong.*)')
-	if printf "%s" "$" | grep -q -- "-"; then
-		ver_compare=$(printf "%s" "$mainline_ver" | sed 's/-*/.0/g')
-		ver_compare=${mainline_ver/*/.0-}
+	version_array=("$mainline_ver" "$stable_ver" "$lts_ver")
+
+	if printf "%s" "${version_array[@]}" | grep -q -- "-rc"; then
+		ver_compare=${version_array[*]/-rc/.0-rc}
 	else
-		ver_compare=$(printf "%s" "$mainline_ver" | sed 's/$/.0/g')
-		ver_compare="${mainline_ver/$$/.0-}"
+		ver_compare="${version_array[*]/-/.0-rc}"
 	fi
+
 	printf "Current running kernel version: %s\n" "$active_ver"
 	printf "Newest mainline kernel: %s\n" "${mainline_ver/-/.0-}"
 	printf "Newest stable kernel: %s\n" "$stable_ver"
 	printf "Newest LTS kernel: %s\n\n" "$lts_ver"
+
 	if [ ! "$second_input" ]; then
 		while read -rp "Do you want to update your Linux kernel, only build, or exit? ([U]pdate|RETURN/[B]uild/[S]how Newest Version/[E]xit) " ubse; do
 			case "$ubse" in
 			[Uu] | "")
 				printf "Checking if newest kernel is already installed...\n"
-				[ "$skip" -eq 0 ] && install_check=$(sudo find /boot -name vmlinuz* -exec file {} \; | grep -o "$ver_compare"* | head -n0)
-
 				if [ "$skip" -eq 1 ]; then
 					printf "Skipping check...\n"
-				elif [ "$install_check" = "$ver_compare" ]; then
-					printf "Current version is up-to-date or newer, exiting...\n"
-					exit 2
 				fi
-				[ -z "$skip" ] && printf "Kernel is outdated, updating the Linux kernel...\n"
+
 				[ -f "$old_dir"/.config ] && cp -i "$old_dir"/.config .
 				directory="blcs_kernel"
+
 				while read -rp "Do you want to download the master, release-candidate, or stable branch, or specify a tag? (M/R/S/[INPUT]) " mrs; do
 					case "$mrs" in
 					[Mm])
-						printf "Downloading newest master kernel branch...\n"
+						kernel="newest master kernel"
 						branch="master"
 						kernel_link="https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git"
-						version="${mainline_ver/-/.0-}"
+						version="${mainline_ver/-rc/.0-rc}"
 						break
 						;;
 					[Rr])
-						printf "Downloading newest release-candidate kernel...\n"
+						kernel="newest release-candidate kernel"
 						branch="v$mainline_ver"
 						kernel_link="https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git"
-						version="${mainline_ver/-/.0-}"
+						version="${mainline_ver/-rc/.0-rc}"
 						break
 						;;
 					[Ss])
-						printf "Downloading newest stable kernel branch...\n"
+						kernel="newest stable kernel"
 						branch="linux-rolling-stable"
 						kernel_link="https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git"
 						version="$stable_ver"
 						break
 						;;
 					*)
-						tag=""
 						printf "Checking if the tag '%s' kernel exists...\n" "$mrs"
 
 						if curl -L https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/refs/tags 2>&1 | grep -q "$mrs"; then
+							kernel="$mrs kernel tag"
 							kernel_link="https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git"
-							tag="$mrs"
+							tag="v$mrs"
 							break
 						elif curl -L https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/refs/tags 2>&1 | grep -q "$mrs"; then
+							kernel="$mrs kernel tag"
 							kernel_link="https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git"
-							tag="$mrs"
+							tag="v$mrs"
 							break
 						else
 							printf "\nError: tag '%s' not found\n" "$mrs"
@@ -205,6 +205,16 @@ startup() {
 					esac
 				done
 
+				[ "$skip" -eq 0 ] && if find sudo /boot/ -name vmlinuz* -exec file {} \; | grep -w "version $version" >/dev/null; then
+						printf "Current version is up-to-date or newer, exiting...\n"
+						exit 2
+					else
+						printf "Kernel is outdated, updating the Linux kernel...\n"
+					fi
+				
+				printf "Downloading the %s...\n" "$kernel"
+
+				[ "$skip" -eq 0 ]
 				if [ "$tag" ]; then
 					git clone "$kernel_link" -b "$tag" --depth=1 "$tag"
 				elif git clone "$kernel_link" -b "$branch" --depth=1 blcs_kernel; then
