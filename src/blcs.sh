@@ -205,7 +205,7 @@ startup() {
 					esac
 				done
 
-				[ "$skip" -eq 0 ] && if find sudo /boot/ -name vmlinuz* -exec file {} \; | grep -w "version $version" >/dev/null; then
+				[ "$skip" -eq 0 ] && if sudo find /boot/ -name vmlinuz* -exec file {} \; | grep -w "version $version" >/dev/null; then
 						printf "Current version is up-to-date or newer, exiting...\n"
 						exit 2
 					else
