@@ -1,5 +1,12 @@
 # What's Changed
 
+[0.5] - 2025.02.17
+
+- Fix IFS causing build menu errors
+- More refactoring efforts
+- Make use of double square brackets
+- Refactoring of variable-related code
+
 [0.4-hotfix] - 2025.02.15
 
 ## Changes
