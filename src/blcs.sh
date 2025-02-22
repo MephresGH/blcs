@@ -281,16 +281,16 @@ case "$first_input" in
 	build=1
 	skip_update=1
 	;;
--[Hh] | --help)
+-[Uu]) ;;
+-[Hh] | --help | *)
 	printf "Usage: update <option> \
-	\nOptions:\n-F, --force\t\tUpdate local kernel git regardless of status \
+	\n\nPrimary options:\n-F, --force\t\tUpdate local kernel git regardless of status \
 	\n-B, --build\t\tBuild a custom kernel if local git was found \
 	\n-U, --update, any key\tDo a regular update first, then build \
 	\n-H, --help\t\tDisplay this help message \
-	\n-E, --extend\t\tExtend name instead of using 'blcs_kernel' for git kernel directory\n"
+	\n\nSecondary options:\n-E, --extend\t\tExtend name instead of using 'blcs_kernel' for git kernel directory\n"
 	exit
 	;;
--[Uu] | *) ;;
 esac
 
 case "$second_input" in
