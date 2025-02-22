@@ -1,5 +1,14 @@
 # What's Changed
 
+[0.6] - 2025.02.22
+
+- Update README.md
+- Minor code refactoring
+- Add -e flag for $second_input variable to extend directory tag
+- Properly compare kernel versions with one another
+- Minor cleanup
+- Fully replace standalone versioning variables with array
+
 [0.5] - 2025.02.17
 
 - Fix IFS causing build menu errors

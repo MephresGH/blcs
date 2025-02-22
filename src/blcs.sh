@@ -217,7 +217,7 @@ startup() {
 						directory="blcs_kernel-$version"
 					fi
 				else
-					directory="blcs-kernel"
+					directory="blcs_kernel"
 				fi
 
 				printf "Downloading the %s (%s)...\n" "$kernel" "$version"
@@ -295,7 +295,7 @@ esac
 
 case "$second_input" in
 -[Ee] | --extend)
-	printf "%s flag was used, adjusting git folder to include full tag name...\n" "$second_input"
+	printf "%s flag has been used, adjusting git folder to include full tag name...\n" "$second_input"
 	;;
 esac
 
