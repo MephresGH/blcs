@@ -4,8 +4,9 @@
 IFS=$'\n'
 
 install_kernel() {
-	if dir=$(find /usr/lib/modules/"$version"* | head -n1); then
-		sudo rm -r "$dir" 2>/dev/null
+	printf "%s\n" "$version"
+	if dir=$(find /usr/lib/modules/"$version"+ | head -n1); then
+		sudo rm -r "$dir"
 	fi
 
 	cp "$SCRIPTPATH"/"$directory"/arch/x86/boot/bzImage "$SCRIPTPATH"/"$directory"/vmlinuz-linux-custom
@@ -157,7 +158,6 @@ startup() {
 				fi
 
 				[[ -f "$old_dir"/.config ]] && cp -i "$old_dir"/.config .
-				directory="blcs_kernel"
 
 				while read -rp "Do you want to download the master, release-candidate, or stable branch, or specify a tag? (M/R/S/[INPUT]) " mrs; do
 					case "$mrs" in
@@ -201,6 +201,8 @@ startup() {
 						;;
 					esac
 				done
+				
+				directory="blcs_kernel-${version}"
 
 				[[ "$skip" == 0 ]] && if sudo find /boot/ -name vmlinuz* -exec file {} \; | grep -w "version $version" >/dev/null; then
 					printf "Current version is up-to-date or newer, exiting...\n"
@@ -211,11 +213,9 @@ startup() {
 
 				printf "Downloading the %s (%s)...\n" "$kernel" "$version"
 
-				[[ "$skip" == 0 ]]
-
 				if [[ "$tag" ]]; then
 					git clone "$kernel_link" -b "$tag" --depth=1 "$tag"
-				elif git clone "$kernel_link" -b "$branch" --depth=1 blcs_kernel; then
+				elif git clone "$kernel_link" -b "$branch" --depth=1 "$directory"; then
 					cp "$SCRIPTPATH"/.config "$SCRIPTPATH"/"$directory"
 					break 2
 				else
