@@ -4,7 +4,6 @@
 IFS=$'\n'
 
 install_kernel() {
-	printf "%s\n" "$version"
 	if dir=$(find /usr/lib/modules/"$version"+ | head -n1); then
 		sudo rm -r "$dir"
 	fi
@@ -79,7 +78,6 @@ build_kernel() {
 	IFS=$' \t\n'
 	basic_threads=$(nproc --all)
 	threads=$((basic_threads + 1))
-	new_git_hash=$(git rev-parse --short HEAD)
 	dir=$(ls -d "$SCRIPTPATH"/"$directory")
 
 	if ! cd "$dir"; then
@@ -91,7 +89,6 @@ build_kernel() {
 		case "$bdcp" in
 		[Bb])
 			git branch -r
-			[[ "$git_hash" = "$new_git_hash" ]] && git_hash=$(git rev-parse --short HEAD)
 
 			if ! make -j"$threads"; then
 				make clean -j"$threads"
@@ -102,7 +99,6 @@ build_kernel() {
 			;;
 		"mb" | "MB")
 			git branch -r
-			[[ "$git_hash" = "$new_git_hash" ]] && git_hash=$(git rev-parse --short HEAD)
 
 			case "$conf" in
 			"")
@@ -141,6 +137,7 @@ build_kernel() {
 }
 
 startup() {
+	kernel_link="https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git"
 	printf "Bash Linux Compilation Script\n\n"
 	printf "Current running kernel version: %s\n" "$active_ver"
 	printf "Newest mainline kernel: %s\n" "${version_array[0]/-/.0-}"
@@ -156,30 +153,29 @@ startup() {
 				while read -rp "Do you want to download the master, release-candidate, or stable branch, or specify a tag? (M/R/S/[INPUT]) " mrs; do
 					case "$mrs" in
 					[Mm])
-						kernel="newest master kernel"
+						kernel_name="newest master kernel"
 						branch="master"
 						version="${version_array[0]/-rc/.0-rc}"
 						break
 						;;
 					[Rr])
-						kernel="newest release-candidate kernel"
+						kernel_name="newest release-candidate kernel"
 						branch="v${version_array[0]}"
 						version="${version_array[0]/-rc/.0-rc}"
 						break
 						;;
 					[Ss])
-						kernel="newest stable kernel"
+						kernel_name="newest stable kernel"
 						branch="linux-rolling-stable"
 						version="${version_array[1]}"
 						break
 						;;
 					*)
-						kernel="$mrs kernel tag"
-						kernel_link="https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git"
+						kernel_name="$mrs kernel tag"
 						printf "Checking if the tag '%s' kernel exists...\n" "$mrs"
 
 						if curl -L "$kernel_link"/refs/tags 2>&1 | grep -q "linux-$mrs"; then
-							tag="v$mrs"
+							branch="v$mrs"
 							break
 						else
 							printf "\nError: tag '%s' not found\n" "$mrs"
@@ -204,8 +200,8 @@ startup() {
 				fi
 
 				if [[ "$second_input" == -[Ee] ]]; then
-					if [[ "$tag" ]]; then
-						directory="blcs_kernel-$tag"
+					if [[ "$branch" ]]; then
+						directory="blcs_kernel-$branch"
 					else
 						directory="blcs_kernel-$version"
 					fi
@@ -213,28 +209,26 @@ startup() {
 					directory="blcs_kernel"
 				fi
 
-				printf "Downloading the %s (%s)...\n" "$kernel" "$version"
+				printf "Downloading the %s (%s)...\n" "$kernel_name" "$version"
 
-				if [[ "$tag" ]]; then
-					git clone "$kernel_link" -b "$tag" --depth=1 "$directory"
-				elif git clone "$kernel_link" -b "$branch" --depth=1 "$directory"; then
+				if [[ ! -d "$directory" ]]; then
+					git clone --branch "$branch" "$kernel_link" --depth=1 "$directory"
 					cp "$SCRIPTPATH"/.config "$SCRIPTPATH"/"$directory"
-					break 2
-				else
-
-					cd "$SCRIPTPATH"/"$directory" || exit 1
-					git_hash=$(git rev-parse --short HEAD)
-
-					if git branch -r | grep "$branch"; then
-						git remote add "$branch" "$kernel_link" 2>/dev/null
-					fi
-
-					git remote set-url origin "$kernel_link"
-					git fetch --depth=1
-					git reset --hard FETCH_HEAD
-					git checkout HEAD
-					break 2
 				fi
+
+				if ! cd "$SCRIPTPATH"/"$directory"; then
+					printf "\nError: directory doesn't exist, exiting...\n"
+					exit 1
+				fi
+
+				if ! git branch -r | grep "$branch"; then
+					git remote add "$branch" "$kernel_link" >/dev/null
+				fi
+
+				git fetch origin --depth=1 "$branch"
+				git reset --hard FETCH_HEAD
+				git checkout HEAD
+				break 1
 				;;
 			[Bb])
 				printf "Skipping update, going to the kernel directory...\n"
@@ -286,14 +280,13 @@ case "$first_input" in
 	;;
 esac
 
-case "$second_input" in
--[Ee] | --extend)
+if [[ "$second_input" == -[Ee] ]]; then
 	printf "%s flag has been used, adjusting git folder to include full tag name...\n" "$second_input"
-	;;
-*)
+elif [[ "$second_input" == "" ]]; then
+	:
+else
 	printf "Error: %s is not a valid parameter\n\n" "$second_input"
-	;;
-esac
+fi
 
 SCRIPTPATH=$(readlink -f "$0" | xargs dirname)
 old_dir=$(find ./blcs_kernel* -type d 2>/dev/null | head -n1)
