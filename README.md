@@ -6,14 +6,27 @@ The purpose of this project is to provide a more basic alternative to linux-tkg,
 
 ### DEPENDENCIES
 The following tools are required to run BLCS:
+- booster (initramfs generator; optional)
+- dracut (initramfs generator; optional)
+- git
 - GNU coreutils
 - GNU make
 - GNU findutils
-- git
-- cd (shell-dependant; usually standard)
-- booster (initramfs generator; optional)
+- mkinitcpio (initramfs generator; optional)
 
 Not having any of those programs will lead to errors. Ensure everything mentioned is installed.
+
+### CONFIGURATION
+The Linux kernel configuration options are given to the user via the ability to select configuration menus, such as menuconfig (ncurses),
+xconfig, gconfig, nconfig and (old)config.
+
+### SETUP
+BLCS is a simple script that can be downloaded via Git's clone feature downloading the project from GitHub.
+To download this project, you can run this command:
+
+`git clone https://github.com/MephresGH/blcs blcs_kernel`, or:
+
+`git clone https://github.com/MephresGH/blcs --depth=1 blcs_kernel`
 
 ### NOTE OF INTEREST
 BLCS is a work-in-progress and not yet stable enough for a proper release. For feature requests, please make use of pull requests.
