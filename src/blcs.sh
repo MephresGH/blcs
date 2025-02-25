@@ -85,7 +85,10 @@ build_kernel() {
 		exit 1
 	fi
 
-	while read -rp "What do you want to do here? ([B]uild/Open [M]enu + [B]uild [CHOOSE MENU]/[M]enu/[D]efault Setup/[C]lear/Back to [P]revious Menu) " bdcp conf; do
+	while :; do
+		printf "%s" "What do you want to do here? \
+([B]uild/Open [M]enu + [B]uild [CHOOSE MENU]/[M]enu/[D]efault Setup/[C]lear/Back to [P]revious Menu) "
+		read -r bdcp conf
 		case "$bdcp" in
 		[Bb])
 			git branch -r
@@ -145,12 +148,16 @@ startup() {
 	printf "Newest LTS kernel: %s\n\n" "${version_array[2]}"
 
 	if [[ "$skip_update" != "1" ]]; then
-		while read -rp "Do you want to update your Linux kernel, only build, or exit? ([U]pdate|RETURN/[B]uild/[S]how Newest Version/[E]xit) " ubse; do
+		while :; do
+			printf "Do you want to update your Linux kernel, only build, or exit? "
+			read -rp "([U]pdate|RETURN/[B]uild/[S]how Newest Version/[E]xit) " ubse
 			case "$ubse" in
 			[Uu] | "")
 				[[ -f "$old_dir"/.config ]] && cp -i "$old_dir"/.config .
 
-				while read -rp "Do you want to download the master, release-candidate, or stable branch, or specify a tag? (M/R/S/[INPUT]) " mrs; do
+				while :; do
+					printf "Do you want to download the master, release-candidate, or stable branch, or specify a tag? "
+					read -rp "(M/R/S/[INPUT]) " mrs
 					case "$mrs" in
 					[Mm])
 						kernel_name="newest master kernel"
@@ -297,7 +304,7 @@ SCRIPTPATH=$(readlink -f "$0" | xargs dirname)
 old_dir=$(find ./blcs_kernel* -type d 2>/dev/null | head -n1)
 active_ver=$(uname -r)
 mapfile -t version_array < <(
-	curl -s https://www.kernel.org | grep -A1 'mainline:' | grep -oP '(?<=strong>).*(?=</strong.*)'
+	curl -s https://www.kernel.org | grep -A1 'mainline:' | grep -oPm1 '(?<=strong>).*(?=</strong.*)'
 	curl -s https://www.kernel.org | grep -A1 'stable:' | grep -oPm1 '(?<=strong>).*(?=</strong.*)'
 	curl -s https://www.kernel.org | grep -A1 'longterm:' | grep -oPm1 '(?<=strong>).*(?=</strong.*)'
 )
