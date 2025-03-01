@@ -37,7 +37,7 @@ install_kernel() {
 		esac
 	done
 
-	if [ -f /usr/bin/booster ]; then
+	if [[ -f /usr/bin/booster ]]; then
 		printf "Booster found.\n"
 		while read -rp "Do you want to remove all previous initrd files? (Y/N) " yn; do
 			case "$yn" in
@@ -211,9 +211,9 @@ startup() {
 					kernel_link="https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git"
 				fi
 
-				if ! git remote -v | grep "$kernel_link"; then
+				if ! git remote -v | grep "$kernel_link" >/dev/null; then
 					git remote set-url origin "$kernel_link" >/dev/null
-				elif [[ ! $(git remote -v) ]]; then
+				elif [[ ! $(git remote -v >/dev/null ) ]]; then
 					git remote add origin "$kernel_link" >/dev/null
 				fi
 
