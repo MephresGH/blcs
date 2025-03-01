@@ -1,5 +1,15 @@
 # What's Changed
 
+[0.8] - 2025.03.01
+
+- Fix git remote condition check
+- Re-insert torvalds kernel link (semi-revert 13603def)
+- Remove duplicate line in if condition
+- Trim read lines
+- Minor cleanup
+- Update README.md
+- Small parameter-related update
+
 [0.7] - 2025.02.24
 
 - Fixed $second_input condition check
