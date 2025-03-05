@@ -14,3 +14,8 @@ The following tools are required to run BLCS:
 - booster (initramfs generator; optional)
 
 Not having any of those programs will lead to errors. Ensure everything mentioned is installed.
+
+### NOTE OF INTEREST
+BLCS is a work-in-progress and not yet stable enough for a proper release. For feature requests, please make use of pull requests.
+Any and all bugs, errors, or oversights should be reported through issues.
+Finally, this project is licensed under the GNU GPL-3.0. Any legal and copyright-related information can be found there.
