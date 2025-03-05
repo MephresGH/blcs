@@ -132,13 +132,6 @@ build_kernel() {
 }
 
 startup() {
-	old_dir=$(find ./blcs_kernel* -type d 2>/dev/null | head -n1)
-	active_ver=$(uname -r)
-	mainline_ver=$(curl -s https://www.kernel.org | grep -A1 'mainline:' | grep -oP '(?<=strong>).*(?=</strong.*)')
-	stable_ver=$(curl -s https://www.kernel.org | grep -A1 'stable:' | grep -oPm1 '(?<=strong>).*(?=</strong.*)')
-	lts_ver=$(curl -s https://www.kernel.org | grep -A1 'longterm:' | grep -oPm1 '(?<=strong>).*(?=</strong.*)')
-	version_array=("$mainline_ver" "$stable_ver" "$lts_ver")
-
 	if printf "%s" "${version_array[@]}" | grep -q -- "-rc"; then
 		ver_compare=${version_array[*]/-rc/.0-rc}
 	else
@@ -206,12 +199,12 @@ startup() {
 				done
 
 				[ "$skip" -eq 0 ] && if sudo find /boot/ -name vmlinuz* -exec file {} \; | grep -w "version $version" >/dev/null; then
-						printf "Current version is up-to-date or newer, exiting...\n"
-						exit 2
-					else
-						printf "Kernel is outdated, updating the Linux kernel...\n"
-					fi
-				
+					printf "Current version is up-to-date or newer, exiting...\n"
+					exit 2
+				else
+					printf "Kernel is outdated, updating the Linux kernel...\n"
+				fi
+
 				printf "Downloading the %s...\n" "$kernel"
 
 				[ "$skip" -eq 0 ]
@@ -265,6 +258,12 @@ SCRIPTPATH=$(readlink -f "$0" | xargs dirname)
 first_input="$1"
 second_input="$2"
 skip=0
+old_dir=$(find ./blcs_kernel* -type d 2>/dev/null | head -n1)
+active_ver=$(uname -r)
+mainline_ver=$(curl -s https://www.kernel.org | grep -A1 'mainline:' | grep -oP '(?<=strong>).*(?=</strong.*)')
+stable_ver=$(curl -s https://www.kernel.org | grep -A1 'stable:' | grep -oPm1 '(?<=strong>).*(?=</strong.*)')
+lts_ver=$(curl -s https://www.kernel.org | grep -A1 'longterm:' | grep -oPm1 '(?<=strong>).*(?=</strong.*)')
+version_array=("$mainline_ver" "$stable_ver" "$lts_ver")
 
 printf "Bash Linux Compilation Script\n\n"
 
