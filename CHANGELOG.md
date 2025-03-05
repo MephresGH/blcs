@@ -1,5 +1,11 @@
 # What's Changed
 
+[0.2] - 2025.01.30
+
+## Changes
+- Add a "v" in front of the "$mrs" variable to make tag checks more robust
+- Remove unnecessary "tag" variable
+
 [0.1.1-hotfix] - 2025.01.19
 
 ## Changes
