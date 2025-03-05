@@ -1,5 +1,15 @@
 # What's Changed
 
+[0.7] - 2025.02.24
+
+- Fixed $second_input condition check
+- Removed duplicate and redundant code
+- Removed git hashes and comparisons
+- Removed unnecessary printf calls
+- Renamed $kernel to $kernel_name
+- Slight refactoring
+- Remove duplicate code and unnecessary git link
+
 [0.6] - 2025.02.22
 
 - Update README.md
