@@ -1,5 +1,14 @@
 # What's Changed
 
+[0.4] - 2025.02.15
+
+## Changes
+
+- Fixed the update check feature
+- Fixed the tag download feature
+- Removed unneeded checks
+- Slight code refactoring
+
 [0.3] - 2025.02.10
 
 ## Changes
