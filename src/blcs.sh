@@ -132,11 +132,7 @@ build_kernel() {
 }
 
 startup() {
-	if printf "%s" "${version_array[@]}" | grep -q -- "-rc"; then
-		ver_compare=${version_array[*]/-rc/.0-rc}
-	else
-		ver_compare="${version_array[*]/-/.0-rc}"
-	fi
+	printf "Bash Linux Compilation Script\n\n"
 
 	printf "Current running kernel version: %s\n" "$active_ver"
 	printf "Newest mainline kernel: %s\n" "${mainline_ver/-/.0-}"
@@ -148,8 +144,7 @@ startup() {
 			case "$ubse" in
 			[Uu] | "")
 				printf "Checking if newest kernel is already installed...\n"
-
-				if [[ "$skip" == 1 ]]; then
+				if [[ "$skip" == true ]]; then
 					printf "Skipping check...\n"
 				fi
 
@@ -206,8 +201,9 @@ startup() {
 					printf "Kernel is outdated, updating the Linux kernel...\n"
 				fi
 
-				printf "Downloading the %s...\n" "$kernel"
+				printf "Downloading the %s (%s)...\n" "$kernel" "$version"
 
+				[[ "$skip" == 0 ]]
 				if [[ "$tag" ]]; then
 					git clone "$kernel_link" -b "$tag" --depth=1 "$tag"
 				elif git clone "$kernel_link" -b "$branch" --depth=1 blcs_kernel; then
@@ -265,12 +261,16 @@ stable_ver=$(curl -s https://www.kernel.org | grep -A1 'stable:' | grep -oPm1 '(
 lts_ver=$(curl -s https://www.kernel.org | grep -A1 'longterm:' | grep -oPm1 '(?<=strong>).*(?=</strong.*)')
 version_array=("$mainline_ver" "$stable_ver" "$lts_ver")
 
-printf "Bash Linux Compilation Script\n\n"
+if printf "%s" "${version_array[@]}" | grep -q -- "-rc"; then
+	ver_compare=${version_array[*]/-rc/.0-rc}
+else
+	ver_compare="${version_array[*]/-/.0-rc}"
+fi
 
 case "$first_input" in
 -[Ff] | --force)
 	printf "%s flag has been used, kernel will be updated regardless...\n" "$first_input"
-	skip=1
+	skip=true
 	;;
 -[Bb] | --build)
 	printf "Skipping update process, going to build instead...\n"
@@ -284,7 +284,7 @@ case "$first_input" in
 	\n-H, --help\t\tDisplay this help message\n"
 	exit
 	;;
--[Uu] | *) printf "Updating the kernel...\n" ;;
+-[Uu] | *) ;;
 esac
 
 if [[ "$build" ]]; then
