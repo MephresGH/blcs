@@ -190,10 +190,31 @@ startup() {
 					esac
 				done
 
-				if grep -E 'stable|tag' <<< "$kernel_name"; then
+				if [[ "$second_input" == -[Ee] ]]; then
+					if [[ "$branch" ]]; then
+						directory="blcs_kernel-$branch"
+					else
+						directory="blcs_kernel-$version"
+					fi
+				else
+					directory="blcs_kernel"
+				fi
+
+				if ! cd "$SCRIPTPATH"/"$directory"; then
+					printf "\nError: directory doesn't exist, exiting...\n"
+					exit 1
+				fi
+
+				if grep -E 'stable|tag' <<<"$kernel_name"; then
 					kernel_link="https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git"
 				else
 					kernel_link="https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git"
+				fi
+
+				if ! git remote -v | grep "$kernel_link"; then
+					git remote set-url origin "$kernel_link" >/dev/null
+				elif [[ ! $(git remote -v) ]]; then
+					git remote add origin "$kernel_link" >/dev/null
 				fi
 
 				printf "Checking if newest kernel is already installed...\n"
@@ -210,32 +231,13 @@ startup() {
 
 				fi
 
-				if [[ "$second_input" == -[Ee] ]]; then
-					if [[ "$branch" ]]; then
-						directory="blcs_kernel-$branch"
-					else
-						directory="blcs_kernel-$version"
-					fi
-				else
-					directory="blcs_kernel"
-				fi
-
 				printf "Downloading the %s (%s)...\n" "$kernel_name" "$version"
 
 				if [[ ! -d "$directory" ]]; then
 					git clone --branch "$branch" "$kernel_link" --depth=1 "$directory"
-					cp "$SCRIPTPATH"/.config "$SCRIPTPATH"/"$directory"
 				fi
 
-				if ! cd "$SCRIPTPATH"/"$directory"; then
-					printf "\nError: directory doesn't exist, exiting...\n"
-					exit 1
-				fi
-
-				if ! git branch -r | grep "$branch"; then
-					git remote add "$branch" "$kernel_link" >/dev/null
-				fi
-
+				cp "$SCRIPTPATH"/.config "$SCRIPTPATH"/"$directory"
 				git fetch origin --depth=1 "$branch"
 				git reset --hard FETCH_HEAD
 				git checkout HEAD
