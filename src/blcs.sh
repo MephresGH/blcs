@@ -107,6 +107,7 @@ build_kernel() {
 				sudo mv build build.bak
 				sudo mkdir build
 				sudo cp -r build.bak/* build/
+				sudo cp "$SCRIPTPATH"/pkgbase . 
 				sudo rm build.bak
 			else
 				printf "Error: directory not found. exiting..."
