@@ -75,16 +75,16 @@ install_kernel() {
 }
 
 build_kernel() {
-	dir=$(ls -d "$SCRIPTPATH"/"$directory")
-	if ! cd "$dir"; then
-		printf "\nError: directory doesn't exist, exiting...\n"
-		exit 1
-	fi
-
 	IFS=$' \t\n'
 	basic_threads=$(nproc --all)
 	threads=$((basic_threads + 1))
 	new_git_hash=$(git rev-parse --short HEAD)
+	dir=$(ls -d "$SCRIPTPATH"/"$directory")
+
+	if ! cd "$dir"; then
+		printf "\nError: directory doesn't exist, exiting...\n"
+		exit 1
+	fi
 
 	while read -rp "What do you want to do here? ([B]uild/Open [M]enu + [B]uild [CHOOSE MENU]/[M]enu/[D]efault Setup/[C]lear/Back to [P]revious Menu) " bdcp conf; do
 		case "$bdcp" in
@@ -141,11 +141,10 @@ build_kernel() {
 
 startup() {
 	printf "Bash Linux Compilation Script\n\n"
-
 	printf "Current running kernel version: %s\n" "$active_ver"
-	printf "Newest mainline kernel: %s\n" "${mainline_ver/-/.0-}"
-	printf "Newest stable kernel: %s\n" "$stable_ver"
-	printf "Newest LTS kernel: %s\n\n" "$lts_ver"
+	printf "Newest mainline kernel: %s\n" "${version_array[0]/-/.0-}"
+	printf "Newest stable kernel: %s\n" "${version_array[1]}"
+	printf "Newest LTS kernel: %s\n\n" "${version_array[2]}"
 
 	if [[ ! "$second_input" ]]; then
 		while read -rp "Do you want to update your Linux kernel, only build, or exit? ([U]pdate|RETURN/[B]uild/[S]how Newest Version/[E]xit) " ubse; do
@@ -166,21 +165,21 @@ startup() {
 						kernel="newest master kernel"
 						branch="master"
 						kernel_link="https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git"
-						version="${mainline_ver/-rc/.0-rc}"
+						version="${version_array[0]/-rc/.0-rc}"
 						break
 						;;
 					[Rr])
 						kernel="newest release-candidate kernel"
-						branch="v$mainline_ver"
+						branch="v${version_array[0]}"
 						kernel_link="https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git"
-						version="${mainline_ver/-rc/.0-rc}"
+						version="${version_array[0]/-rc/.0-rc}"
 						break
 						;;
 					[Ss])
 						kernel="newest stable kernel"
 						branch="linux-rolling-stable"
 						kernel_link="https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git"
-						version="$stable_ver"
+						version="${version_array[1]}"
 						break
 						;;
 					*)
@@ -240,7 +239,7 @@ startup() {
 				break
 				;;
 			[Ss])
-				printf "Current kernel version: %s\nNewest kernel version: %s\n" "$active_ver" "${mainline_ver/-/.0-}"
+				printf "Current kernel version: %s\nNewest kernel version: %s\n" "$active_ver" "${version_array[0]/-/.0-}"
 				install_check=$(sudo find /boot -name vmlinuz* -exec file {} \; | grep -o "$ver_compare")
 
 				if [[ "$install_check" = "$version" ]]; then
@@ -266,10 +265,11 @@ second_input="$2"
 skip=0
 old_dir=$(find ./blcs_kernel* -type d 2>/dev/null | head -n1)
 active_ver=$(uname -r)
-mainline_ver=$(curl -s https://www.kernel.org | grep -A1 'mainline:' | grep -oP '(?<=strong>).*(?=</strong.*)')
-stable_ver=$(curl -s https://www.kernel.org | grep -A1 'stable:' | grep -oPm1 '(?<=strong>).*(?=</strong.*)')
-lts_ver=$(curl -s https://www.kernel.org | grep -A1 'longterm:' | grep -oPm1 '(?<=strong>).*(?=</strong.*)')
-version_array=("$mainline_ver" "$stable_ver" "$lts_ver")
+readarray -t version_array < <(
+	curl -s https://www.kernel.org | grep -A1 'mainline:' | grep -oP '(?<=strong>).*(?=</strong.*)'
+	curl -s https://www.kernel.org | grep -A1 'stable:' | grep -oPm1 '(?<=strong>).*(?=</strong.*)'
+	curl -s https://www.kernel.org | grep -A1 'longterm:' | grep -oPm1 '(?<=strong>).*(?=</strong.*)'
+)
 
 if printf "%s" "${version_array[@]}" | grep -q -- "-rc"; then
 	ver_compare=${version_array[*]/-rc/.0-rc}
