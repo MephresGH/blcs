@@ -146,7 +146,7 @@ startup() {
 	printf "Newest stable kernel: %s\n" "${version_array[1]}"
 	printf "Newest LTS kernel: %s\n\n" "${version_array[2]}"
 
-	if [[ "$skip_update" != "1" ]]; then
+	if [[ "$skip_update" -ne "1" ]]; then
 		while :; do
 			printf "Do you want to update your Linux kernel, only build, or exit? "
 			read -rp "([U]pdate|RETURN/[B]uild/[S]how Newest Version/[E]xit) " ubse
@@ -220,7 +220,7 @@ startup() {
 
 				printf "Checking if newest kernel is already installed...\n"
 
-				if [[ "$skip_check" == 1 ]]; then
+				if [[ "$skip_check" -eq 1 ]]; then
 					printf "Skipping check...\n"
 				else
 					if sudo find /boot/ -name vmlinuz* -exec file {} \; | grep -w "version $version" | sort -VC; then
