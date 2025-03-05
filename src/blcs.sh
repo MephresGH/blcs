@@ -147,16 +147,10 @@ startup() {
 	printf "Newest stable kernel: %s\n" "${version_array[1]}"
 	printf "Newest LTS kernel: %s\n\n" "${version_array[2]}"
 
-	if [[ ! "$second_input" ]]; then
+	if [[ "$skip_update" != "1" ]]; then
 		while read -rp "Do you want to update your Linux kernel, only build, or exit? ([U]pdate|RETURN/[B]uild/[S]how Newest Version/[E]xit) " ubse; do
 			case "$ubse" in
 			[Uu] | "")
-				printf "Checking if newest kernel is already installed...\n"
-
-				if [[ "$skip" == 0 ]]; then
-					printf "Skipping check...\n"
-				fi
-
 				[[ -f "$old_dir"/.config ]] && cp -i "$old_dir"/.config .
 
 				while read -rp "Do you want to download the master, release-candidate, or stable branch, or specify a tag? (M/R/S/[INPUT]) " mrs; do
@@ -183,15 +177,14 @@ startup() {
 						break
 						;;
 					*)
+						kernel="$mrs kernel tag"
 						printf "Checking if the tag '%s' kernel exists...\n" "$mrs"
 
 						if curl -L https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/refs/tags 2>&1 | grep -q "$mrs"; then
-							kernel="$mrs kernel tag"
 							kernel_link="https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git"
 							tag="v$mrs"
 							break
 						elif curl -L https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/refs/tags 2>&1 | grep -q "$mrs"; then
-							kernel="$mrs kernel tag"
 							kernel_link="https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git"
 							tag="v$mrs"
 							break
@@ -201,16 +194,23 @@ startup() {
 						;;
 					esac
 				done
-				
-				directory="blcs_kernel-${version}"
 
-				[[ "$skip" == 0 ]] && if sudo find /boot/ -name vmlinuz* -exec file {} \; | grep -w "version $version" >/dev/null; then
-					printf "Current version is up-to-date or newer, exiting...\n"
-					exit 2
+				printf "Checking if newest kernel is already installed...\n"
+
+				if [[ "$skip_check" == 1 ]]; then
+					printf "Skipping check...\n"
 				else
-					printf "Kernel is outdated, updating the Linux kernel...\n"
+					if sudo find /boot/ -name vmlinuz* -exec file {} \; | grep -w "version $version" | sort -VC ||
+						sudo find /boot/ -name vmlinuz* -exec file {} \; | grep -w "version $version" | sort -VC; then
+						printf "Current version is up-to-date or newer, exiting...\n"
+						exit 2
+					else
+						printf "Kernel is outdated, updating the Linux kernel...\n"
+					fi
+
 				fi
 
+				directory="blcs_kernel-${version}"
 				printf "Downloading the %s (%s)...\n" "$kernel" "$version"
 
 				if [[ "$tag" ]]; then
@@ -240,12 +240,11 @@ startup() {
 				;;
 			[Ss])
 				printf "Current kernel version: %s\nNewest kernel version: %s\n" "$active_ver" "${version_array[0]/-/.0-}"
-				install_check=$(sudo find /boot -name vmlinuz* -exec file {} \; | grep -o "$ver_compare")
-
-				if [[ "$install_check" = "$version" ]]; then
-					printf "The newest kernel is installed on the local computer.\n"
+				if sudo find /boot/ -name vmlinuz* -exec file {} \; | grep -w "version $version" | sort -VC ||
+					sudo find /boot/ -name vmlinuz* -exec file {} \; | grep -w "version $version" | sort -VC; then
+					printf "Kernel %s or newer is installed on the local computer.\n" "${version_array[0]/-/.0-}"
 				else
-					printf "The newest kernel is not installed on the local computer.\n"
+					printf "Kernel %s is not installed on the local computer.\n" "${version_array[0]/-/.0-}"
 				fi
 				;;
 			[Ee])
@@ -262,7 +261,7 @@ startup() {
 SCRIPTPATH=$(readlink -f "$0" | xargs dirname)
 first_input="$1"
 second_input="$2"
-skip=0
+skip_check=0
 old_dir=$(find ./blcs_kernel* -type d 2>/dev/null | head -n1)
 active_ver=$(uname -r)
 readarray -t version_array < <(
@@ -271,20 +270,15 @@ readarray -t version_array < <(
 	curl -s https://www.kernel.org | grep -A1 'longterm:' | grep -oPm1 '(?<=strong>).*(?=</strong.*)'
 )
 
-if printf "%s" "${version_array[@]}" | grep -q -- "-rc"; then
-	ver_compare=${version_array[*]/-rc/.0-rc}
-else
-	ver_compare="${version_array[*]/-/.0-rc}"
-fi
-
 case "$first_input" in
 -[Ff] | --force)
 	printf "%s flag has been used, kernel will be updated regardless...\n" "$first_input"
-	skip=true
+	skip_check=1
 	;;
 -[Bb] | --build)
 	printf "Skipping update process, going to build instead...\n"
-	build=1 second_input=2
+	build=1
+	skip_update=1
 	;;
 -[Hh] | --help)
 	printf "Usage: update <option> \
