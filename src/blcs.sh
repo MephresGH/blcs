@@ -269,14 +269,18 @@ case "$first_input" in
 	skip_update=1
 	;;
 -[Uu]) ;;
--[Hh] | --help | *)
+-[Hh] | --help | "")
 	printf "Usage: update <option> \
 	\n\nPrimary options:\n-F, --force\t\tUpdate local kernel git regardless of status \
 	\n-B, --build\t\tBuild a custom kernel if local git was found \
-	\n-U, --update, any key\tDo a regular update first, then build \
+	\n-U, --update\tDo a regular update first, then build \
 	\n-H, --help\t\tDisplay this help message \
 	\n\nSecondary options:\n-E, --extend\t\tExtend name instead of using 'blcs_kernel' for git kernel directory\n"
 	exit
+	;;
+*)
+	printf "Error: %s is not a valid primary parameter\n" "$first_input"
+	exit 1
 	;;
 esac
 
@@ -285,7 +289,8 @@ if [[ "$second_input" == -[Ee] ]]; then
 elif [[ "$second_input" == "" ]]; then
 	:
 else
-	printf "Error: %s is not a valid parameter\n\n" "$second_input"
+	printf "Error: %s is not a valid secondary parameter\n" "$second_input"
+	exit 1
 fi
 
 SCRIPTPATH=$(readlink -f "$0" | xargs dirname)
