@@ -1,5 +1,11 @@
 # What's Changed
 
+[0.4-hotfix] - 2025.02.15
+
+## Changes
+
+- Fix error in "find" line
+
 [0.4] - 2025.02.15
 
 ## Changes
@@ -22,7 +28,7 @@
 - Copy vmlinuz over to /usr/lib/modules directory
 - Add pkgbase to modules directory
 
-[0.2.1-hotfix] - 2025.01.31
+[0.2-hotfix] - 2025.01.31
 
 ## Changes
 - Reverted removal of "$tag" variable in 68cbd0f6
