@@ -273,7 +273,7 @@ case "$first_input" in
 	printf "Usage: update <option> \
 	\n\nPrimary options:\n-F, --force\t\tUpdate local kernel git regardless of status \
 	\n-B, --build\t\tBuild a custom kernel if local git was found \
-	\n-U, --update\tDo a regular update first, then build \
+	\n-U, --update\t\tDo a regular update first, then build \
 	\n-H, --help\t\tDisplay this help message \
 	\n\nSecondary options:\n-E, --extend\t\tExtend name instead of using 'blcs_kernel' for git kernel directory\n"
 	exit
@@ -296,7 +296,7 @@ fi
 SCRIPTPATH=$(readlink -f "$0" | xargs dirname)
 old_dir=$(find ./blcs_kernel* -type d 2>/dev/null | head -n1)
 active_ver=$(uname -r)
-readarray -t version_array < <(
+mapfile -t version_array < <(
 	curl -s https://www.kernel.org | grep -A1 'mainline:' | grep -oP '(?<=strong>).*(?=</strong.*)'
 	curl -s https://www.kernel.org | grep -A1 'stable:' | grep -oPm1 '(?<=strong>).*(?=</strong.*)'
 	curl -s https://www.kernel.org | grep -A1 'longterm:' | grep -oPm1 '(?<=strong>).*(?=</strong.*)'
