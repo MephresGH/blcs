@@ -1,18 +1,18 @@
-# Changelog
+# What's Changed
 
 [0.1.1] - 2025.01.14
 
-## Changed
+## Changes
 
 - Minor cleanup
 - Implement basic tag specification functionality
 
-## Added
+## Additions
 
 - Basic changelog
 
 [0.1] - 2025.01.12
 
-## Added
+## Additions
 
 - Initial commit
