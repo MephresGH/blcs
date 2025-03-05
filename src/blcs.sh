@@ -208,7 +208,6 @@ startup() {
 				if [ "$tag" ]; then
 					git clone "$kernel_link" -b "$tag" --depth=1 "$tag"
 				elif git clone "$kernel_link" -b "$branch" --depth=1 blcs_kernel; then
-					git worktree add linux origin/master
 					cp "$SCRIPTPATH"/.config "$SCRIPTPATH"/"$directory"
 					break 2
 				else
