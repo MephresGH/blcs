@@ -89,7 +89,7 @@ build_kernel() {
 		case "$bdcp" in
 		[Bb])
 			git branch -r
-			[ "$git_hash" = "$new_git_hash" ] && git_hash=$(git rev-parse --short HEAD)
+			[[ "$git_hash" = "$new_git_hash" ]] && git_hash=$(git rev-parse --short HEAD)
 			if ! make -j"$threads"; then
 				make clean -j"$threads"
 				make -j"$threads"
@@ -98,7 +98,7 @@ build_kernel() {
 			;;
 		"mb" | "MB")
 			git branch -r
-			[ "$git_hash" = "$new_git_hash" ] && git_hash=$(git rev-parse --short HEAD)
+			[[ "$git_hash" = "$new_git_hash" ]] && git_hash=$(git rev-parse --short HEAD)
 			case "$conf" in
 			"")
 				printf "Warning: no menu selected, continuing without build menu\n"
@@ -143,16 +143,17 @@ startup() {
 	printf "Newest stable kernel: %s\n" "$stable_ver"
 	printf "Newest LTS kernel: %s\n\n" "$lts_ver"
 
-	if [ ! "$second_input" ]; then
+	if [[ ! "$second_input" ]]; then
 		while read -rp "Do you want to update your Linux kernel, only build, or exit? ([U]pdate|RETURN/[B]uild/[S]how Newest Version/[E]xit) " ubse; do
 			case "$ubse" in
 			[Uu] | "")
 				printf "Checking if newest kernel is already installed...\n"
-				if [ "$skip" -eq 1 ]; then
+
+				if [[ "$skip" == 1 ]]; then
 					printf "Skipping check...\n"
 				fi
 
-				[ -f "$old_dir"/.config ] && cp -i "$old_dir"/.config .
+				[[ -f "$old_dir"/.config ]] && cp -i "$old_dir"/.config .
 				directory="blcs_kernel"
 
 				while read -rp "Do you want to download the master, release-candidate, or stable branch, or specify a tag? (M/R/S/[INPUT]) " mrs; do
@@ -198,7 +199,7 @@ startup() {
 					esac
 				done
 
-				[ "$skip" -eq 0 ] && if sudo find /boot/ -name vmlinuz* -exec file {} \; | grep -w "version $version" >/dev/null; then
+				[[ "$skip" == 0 ]] && if sudo find /boot/ -name vmlinuz* -exec file {} \; | grep -w "version $version" >/dev/null; then
 					printf "Current version is up-to-date or newer, exiting...\n"
 					exit 2
 				else
@@ -207,8 +208,7 @@ startup() {
 
 				printf "Downloading the %s...\n" "$kernel"
 
-				[ "$skip" -eq 0 ]
-				if [ "$tag" ]; then
+				if [[ "$tag" ]]; then
 					git clone "$kernel_link" -b "$tag" --depth=1 "$tag"
 				elif git clone "$kernel_link" -b "$branch" --depth=1 blcs_kernel; then
 					cp "$SCRIPTPATH"/.config "$SCRIPTPATH"/"$directory"
@@ -237,7 +237,7 @@ startup() {
 				printf "Current kernel version: %s\nNewest kernel version: %s\n" "$active_ver" "${mainline_ver/-/.0-}"
 				install_check=$(sudo find /boot -name vmlinuz* -exec file {} \; | grep -o "$ver_compare")
 
-				if [ "$install_check" = "$version" ]; then
+				if [[ "$install_check" = "$version" ]]; then
 					printf "The newest kernel is installed on the local computer.\n"
 				else
 					printf "The newest kernel is not installed on the local computer.\n"
@@ -287,7 +287,7 @@ case "$first_input" in
 -[Uu] | *) printf "Updating the kernel...\n" ;;
 esac
 
-if [ "$build" ]; then
+if [[ "$build" ]]; then
 	build_kernel
 else
 	startup
