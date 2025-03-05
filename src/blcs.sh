@@ -158,34 +158,27 @@ startup() {
 					[Mm])
 						kernel="newest master kernel"
 						branch="master"
-						kernel_link="https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git"
 						version="${version_array[0]/-rc/.0-rc}"
 						break
 						;;
 					[Rr])
 						kernel="newest release-candidate kernel"
 						branch="v${version_array[0]}"
-						kernel_link="https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git"
 						version="${version_array[0]/-rc/.0-rc}"
 						break
 						;;
 					[Ss])
 						kernel="newest stable kernel"
 						branch="linux-rolling-stable"
-						kernel_link="https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git"
 						version="${version_array[1]}"
 						break
 						;;
 					*)
 						kernel="$mrs kernel tag"
+						kernel_link="https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git"
 						printf "Checking if the tag '%s' kernel exists...\n" "$mrs"
 
-						if curl -L https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/refs/tags 2>&1 | grep -q "linux-$mrs"; then
-							kernel_link="https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git"
-							tag="v$mrs"
-							break
-						elif curl -L https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/refs/tags 2>&1 | grep -q "linux-$mrs"; then
-							kernel_link="https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git"
+						if curl -L "$kernel_link"/refs/tags 2>&1 | grep -q "linux-$mrs"; then
 							tag="v$mrs"
 							break
 						else
@@ -296,6 +289,9 @@ esac
 case "$second_input" in
 -[Ee] | --extend)
 	printf "%s flag has been used, adjusting git folder to include full tag name...\n" "$second_input"
+	;;
+*)
+	printf "Error: %s is not a valid parameter\n\n" "$second_input"
 	;;
 esac
 
