@@ -1,5 +1,18 @@
 # What's Changed
 
+[0.3] - 2025.02.10
+
+## Changes
+
+- Remove git worktree command
+- Add newline for error messages
+- Trim build_kernel() function; add install_kernel() function
+- Add newline for every variable
+- Change /lib/ to /usr/lib/ in find command
+- Install custom headers before creating initramfs
+- Copy vmlinuz over to /usr/lib/modules directory
+- Add pkgbase to modules directory
+
 [0.2.1-hotfix] - 2025.01.31
 
 ## Changes
