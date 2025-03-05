@@ -140,7 +140,6 @@ build_kernel() {
 }
 
 startup() {
-	kernel_link="https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git"
 	printf "Bash Linux Compilation Script\n\n"
 	printf "Current running kernel version: %s\n" "$active_ver"
 	printf "Newest mainline kernel: %s\n" "${version_array[0]/-/.0-}"
@@ -181,7 +180,7 @@ startup() {
 						kernel_name="$mrs kernel tag"
 						printf "Checking if the tag '%s' kernel exists...\n" "$mrs"
 
-						if curl -L "$kernel_link"/refs/tags 2>&1 | grep -q "linux-$mrs"; then
+						if curl -L https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/refs/tags 2>&1 | grep -q "linux-$mrs"; then
 							branch="v$mrs"
 							break
 						else
@@ -190,6 +189,12 @@ startup() {
 						;;
 					esac
 				done
+
+				if grep -E 'stable|tag' <<< "$kernel_name"; then
+					kernel_link="https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git"
+				else
+					kernel_link="https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git"
+				fi
 
 				printf "Checking if newest kernel is already installed...\n"
 
