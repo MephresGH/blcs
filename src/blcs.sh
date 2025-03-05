@@ -57,7 +57,7 @@ build_kernel() {
 		esac
 	done
 
-	if dir=$(find /lib/modules/"$version"* | head -n1); then
+	if dir=$(find /usr/lib/modules/"$version"* | head -n1); then
 		sudo rm -r "$dir" 2>/dev/null
 	fi
 
