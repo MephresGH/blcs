@@ -196,8 +196,7 @@ startup() {
 				if [[ "$skip_check" == 1 ]]; then
 					printf "Skipping check...\n"
 				else
-					if sudo find /boot/ -name vmlinuz* -exec file {} \; | grep -w "version $version" | sort -VC ||
-						sudo find /boot/ -name vmlinuz* -exec file {} \; | grep -w "version $version" | sort -VC; then
+					if sudo find /boot/ -name vmlinuz* -exec file {} \; | grep -w "version $version" | sort -VC; then
 						printf "Current version is up-to-date or newer, exiting...\n"
 						exit 2
 					else
