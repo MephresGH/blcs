@@ -1,5 +1,11 @@
 # What's Changed
 
+[0.2.1-hotfix] - 2025.01.31
+
+## Changes
+- Reverted removal of "$tag" variable in 68cbd0f6
+- ACTUALLY fixed the custom tag check functionality
+
 [0.2] - 2025.01.30
 
 ## Changes

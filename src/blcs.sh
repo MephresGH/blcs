@@ -181,14 +181,16 @@ startup() {
 						break
 						;;
 					*)
-						mrs="v$mrs"
+						tag=""
 						printf "Checking if the tag '%s' kernel exists...\n" "$mrs"
 
 						if curl -L https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/refs/tags 2>&1 | grep -q "$mrs"; then
 							kernel_link="https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git"
+							tag="$mrs"
 							break
 						elif curl -L https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/refs/tags 2>&1 | grep -q "$mrs"; then
 							kernel_link="https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git"
+							tag="$mrs"
 							break
 						else
 							printf "Error: tag '%s' not found\n" "$mrs"
@@ -197,8 +199,8 @@ startup() {
 					esac
 				done
 
-				if [ "$mrs" ]; then
-					git clone "$kernel_link" -b "$mrs" --depth=1 "$mrs"
+				if [ "$tag" ]; then
+					git clone "$kernel_link" -b "$tag" --depth=1 "$tag"
 				elif git clone "$kernel_link" -b "$branch" --depth=1 blcs_kernel; then
 					git worktree add linux origin/master
 					cp "$SCRIPTPATH"/.config "$SCRIPTPATH"/"$directory"
