@@ -180,11 +180,11 @@ startup() {
 						kernel="$mrs kernel tag"
 						printf "Checking if the tag '%s' kernel exists...\n" "$mrs"
 
-						if curl -L https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/refs/tags 2>&1 | grep -q "$mrs"; then
+						if curl -L https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/refs/tags 2>&1 | grep -q "linux-$mrs"; then
 							kernel_link="https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git"
 							tag="v$mrs"
 							break
-						elif curl -L https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/refs/tags 2>&1 | grep -q "$mrs"; then
+						elif curl -L https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/refs/tags 2>&1 | grep -q "linux-$mrs"; then
 							kernel_link="https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git"
 							tag="v$mrs"
 							break
@@ -210,11 +210,20 @@ startup() {
 
 				fi
 
-				directory="blcs_kernel-${version}"
+				if [[ "$second_input" == -[Ee] ]]; then
+					if [[ "$tag" ]]; then
+						directory="blcs_kernel-$tag"
+					else
+						directory="blcs_kernel-$version"
+					fi
+				else
+					directory="blcs-kernel"
+				fi
+
 				printf "Downloading the %s (%s)...\n" "$kernel" "$version"
 
 				if [[ "$tag" ]]; then
-					git clone "$kernel_link" -b "$tag" --depth=1 "$tag"
+					git clone "$kernel_link" -b "$tag" --depth=1 "$directory"
 				elif git clone "$kernel_link" -b "$branch" --depth=1 "$directory"; then
 					cp "$SCRIPTPATH"/.config "$SCRIPTPATH"/"$directory"
 					break 2
@@ -258,17 +267,9 @@ startup() {
 	fi
 }
 
-SCRIPTPATH=$(readlink -f "$0" | xargs dirname)
 first_input="$1"
 second_input="$2"
 skip_check=0
-old_dir=$(find ./blcs_kernel* -type d 2>/dev/null | head -n1)
-active_ver=$(uname -r)
-readarray -t version_array < <(
-	curl -s https://www.kernel.org | grep -A1 'mainline:' | grep -oP '(?<=strong>).*(?=</strong.*)'
-	curl -s https://www.kernel.org | grep -A1 'stable:' | grep -oPm1 '(?<=strong>).*(?=</strong.*)'
-	curl -s https://www.kernel.org | grep -A1 'longterm:' | grep -oPm1 '(?<=strong>).*(?=</strong.*)'
-)
 
 case "$first_input" in
 -[Ff] | --force)
@@ -285,11 +286,27 @@ case "$first_input" in
 	\nOptions:\n-F, --force\t\tUpdate local kernel git regardless of status \
 	\n-B, --build\t\tBuild a custom kernel if local git was found \
 	\n-U, --update, any key\tDo a regular update first, then build \
-	\n-H, --help\t\tDisplay this help message\n"
+	\n-H, --help\t\tDisplay this help message \
+	\n-E, --extend\t\tExtend name instead of using 'blcs_kernel' for git kernel directory\n"
 	exit
 	;;
 -[Uu] | *) ;;
 esac
+
+case "$second_input" in
+-[Ee] | --extend)
+	printf "%s flag was used, adjusting git folder to include full tag name...\n" "$second_input"
+	;;
+esac
+
+SCRIPTPATH=$(readlink -f "$0" | xargs dirname)
+old_dir=$(find ./blcs_kernel* -type d 2>/dev/null | head -n1)
+active_ver=$(uname -r)
+readarray -t version_array < <(
+	curl -s https://www.kernel.org | grep -A1 'mainline:' | grep -oP '(?<=strong>).*(?=</strong.*)'
+	curl -s https://www.kernel.org | grep -A1 'stable:' | grep -oPm1 '(?<=strong>).*(?=</strong.*)'
+	curl -s https://www.kernel.org | grep -A1 'longterm:' | grep -oPm1 '(?<=strong>).*(?=</strong.*)'
+)
 
 if [[ "$build" ]]; then
 	build_kernel
