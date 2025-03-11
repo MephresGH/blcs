@@ -180,8 +180,7 @@ startup() {
 						kernel_name="$mrs kernel tag"
 						printf "Checking if the tag '%s' kernel exists...\n" "$mrs"
 
-						if curl -L https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/refs/tags 2>&1 \
-							| grep -q "linux-$mrs"; then
+						if grep -q "linux-$mrs" <<<"$(curl -L https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/refs/tags 2>&1)"; then
 							branch="v$mrs"
 							break
 						else
@@ -212,7 +211,7 @@ startup() {
 					kernel_link="https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git"
 				fi
 
-				if ! git remote -v | grep "$kernel_link" >/dev/null; then
+				if ! grep "$kernel_link" <<<"$(git remote -v)" >/dev/null; then
 					git remote set-url origin "$kernel_link" >/dev/null
 				elif [[ ! $(git remote -v >/dev/null ) ]]; then
 					git remote add origin "$kernel_link" >/dev/null
@@ -223,7 +222,7 @@ startup() {
 				if [[ "$skip_check" -eq 1 ]]; then
 					printf "Skipping check...\n"
 				else
-					if sudo find /boot/ -name vmlinuz* -exec file {} \; | grep -w "version $version" | sort -VC; then
+					if grep -w "version $version" <<<"$(sudo find /boot/ -name vmlinuz* -exec file {} \;)" | sort -VC; then
 						printf "Current version is up-to-date or newer, exiting...\n"
 						exit 2
 					else
@@ -250,8 +249,8 @@ startup() {
 				;;
 			[Ss])
 				printf "Current kernel version: %s\nNewest kernel version: %s\n" "$active_ver" "${version_array[0]/-/.0-}"
-				if sudo find /boot/ -name vmlinuz* -exec file {} \; | grep -w "version $version" | sort -VC ||
-					sudo find /boot/ -name vmlinuz* -exec file {} \; | grep -w "version $version" | sort -VC; then
+				if grep -w "version $version" <<<"$(sudo find /boot/ -name vmlinuz* -exec file {} \;)" | sort -VC ||
+					grep -w "version $version" <<<"$(sudo find /boot/ -name vmlinuz* -exec file {} \;)" | sort -VC; then
 					printf "Kernel %s or newer is installed on the local computer.\n" "${version_array[0]/-/.0-}"
 				else
 					printf "Kernel %s is not installed on the local computer.\n" "${version_array[0]/-/.0-}"
@@ -311,9 +310,9 @@ SCRIPTPATH=$(readlink -f "$0" | xargs dirname)
 old_dir=$(find ./blcs_kernel* -type d 2>/dev/null | head -n1)
 active_ver=$(uname -r)
 mapfile -t version_array < <(
-	curl -s https://www.kernel.org | grep -A1 'mainline:' | grep -oPm1 '(?<=strong>).*(?=</strong.*)'
-	curl -s https://www.kernel.org | grep -A1 'stable:' | grep -oPm1 '(?<=strong>).*(?=</strong.*)'
-	curl -s https://www.kernel.org | grep -A1 'longterm:' | grep -oPm1 '(?<=strong>).*(?=</strong.*)'
+curl -s https://www.kernel.org | grep -oPm1 '(?<=strong>).*(?=</strong.*)' <<<"$(grep -A1 'mainline:')"
+curl -s https://www.kernel.org | grep -oPm1 '(?<=strong>).*(?=</strong.*)' <<<"$(grep -A1 'stable:')"
+curl -s https://www.kernel.org | grep -oPm1 '(?<=strong>).*(?=</strong.*)' <<<"$(grep -A1 'longterm:')"
 )
 
 if [[ "$build" ]]; then
