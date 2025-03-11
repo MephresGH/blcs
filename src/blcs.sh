@@ -140,9 +140,11 @@ build_kernel() {
 }
 
 startup() {
+	master_version="${version_array[0]/-/.0-}"
+
 	printf "Bash Linux Compilation Script\n\n"
 	printf "Current running kernel version: %s\n" "$active_ver"
-	printf "Newest mainline kernel: %s\n" "${version_array[0]/-/.0-}"
+	printf "Newest mainline kernel: %s\n" "$master_version"
 	printf "Newest stable kernel: %s\n" "${version_array[1]}"
 	printf "Newest LTS kernel: %s\n\n" "${version_array[2]}"
 
@@ -161,13 +163,13 @@ startup() {
 					[Mm])
 						kernel_name="newest master kernel"
 						branch="master"
-						version="${version_array[0]/-rc/.0-rc}"
+						version="$master_version"
 						break
 						;;
 					[Rr])
 						kernel_name="newest release-candidate kernel"
 						branch="v${version_array[0]}"
-						version="${version_array[0]/-rc/.0-rc}"
+						version="$master_version"
 						break
 						;;
 					[Ss])
@@ -213,7 +215,7 @@ startup() {
 
 				if ! grep "$kernel_link" <<<"$(git remote -v)" >/dev/null; then
 					git remote set-url origin "$kernel_link" >/dev/null
-				elif [[ ! $(git remote -v >/dev/null ) ]]; then
+				elif [[ ! $(git remote -v >/dev/null) ]]; then
 					git remote add origin "$kernel_link" >/dev/null
 				fi
 
@@ -248,12 +250,12 @@ startup() {
 				break
 				;;
 			[Ss])
-				printf "Current kernel version: %s\nNewest kernel version: %s\n" "$active_ver" "${version_array[0]/-/.0-}"
+				printf "Current kernel version: %s\nNewest kernel version: %s\n" "$active_ver" "$master_version"
 				if grep -w "version $version" <<<"$(sudo find /boot/ -name vmlinuz* -exec file {} \;)" | sort -VC ||
 					grep -w "version $version" <<<"$(sudo find /boot/ -name vmlinuz* -exec file {} \;)" | sort -VC; then
-					printf "Kernel %s or newer is installed on the local computer.\n" "${version_array[0]/-/.0-}"
+					printf "Kernel %s or newer is installed on the local computer.\n" "$master_version"
 				else
-					printf "Kernel %s is not installed on the local computer.\n" "${version_array[0]/-/.0-}"
+					printf "Kernel %s is not installed on the local computer.\n" "$master_version"
 				fi
 				;;
 			[Ee])
@@ -310,9 +312,9 @@ SCRIPTPATH=$(readlink -f "$0" | xargs dirname)
 old_dir=$(find ./blcs_kernel* -type d 2>/dev/null | head -n1)
 active_ver=$(uname -r)
 mapfile -t version_array < <(
-curl -s https://www.kernel.org | grep -oPm1 '(?<=strong>).*(?=</strong.*)' <<<"$(grep -A1 'mainline:')"
-curl -s https://www.kernel.org | grep -oPm1 '(?<=strong>).*(?=</strong.*)' <<<"$(grep -A1 'stable:')"
-curl -s https://www.kernel.org | grep -oPm1 '(?<=strong>).*(?=</strong.*)' <<<"$(grep -A1 'longterm:')"
+	curl -s https://www.kernel.org | grep -oPm1 '(?<=strong>).*(?=</strong.*)' <<<"$(grep -A1 'mainline:')"
+	curl -s https://www.kernel.org | grep -oPm1 '(?<=strong>).*(?=</strong.*)' <<<"$(grep -A1 'stable:')"
+	curl -s https://www.kernel.org | grep -oPm1 '(?<=strong>).*(?=</strong.*)' <<<"$(grep -A1 'longterm:')"
 )
 
 if [[ "$build" ]]; then
