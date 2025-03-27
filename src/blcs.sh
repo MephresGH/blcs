@@ -43,8 +43,7 @@ install_kernel() {
 			case "$yn" in
 			[Yy])
 				printf "Removing previous initrd files...\n"
-				sudo rm /boot/initram*
-				sudo rm /boot/initrd*
+				sudo rm /boot/{initram,initrd}*
 				break
 				;;
 			[Nn])
@@ -283,7 +282,7 @@ case "$first_input" in
 	build=1
 	skip_update=1
 	;;
--[Uu]) ;;
+-[Uu] | --update) ;;
 -[Hh] | --help | "")
 	printf "Usage: update <option> \
 	\n\nPrimary options:\n-F, --force\t\tUpdate local kernel git regardless of status \
